@@ -9,13 +9,17 @@ const client = new Client({
   database: 'postgres',
 });
 
-console.log('Attempting connection...');
-client.connect()
-  .then(() => {
-    console.log('Connected successfully!');
-    client.end();
-  })
-  .catch(err => {
-    console.error('Connection failed:', err);
-    process.exit(1);
-  });
+async function connectDB() {
+  try {
+    console.log('Attempting database connection...');
+    await client.connect();
+    console.log('Database connected successfully!');
+  } catch (error) {
+    console.error('Database connection failed:', error.message);
+  } finally {
+    await client.end();
+    console.log('Connection closed.');
+  }
+}
+
+connectDB();
