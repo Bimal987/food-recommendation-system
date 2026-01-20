@@ -1,7 +1,8 @@
 {
   "name": "food-recommendation-server",
   "version": "1.0.0",
-  "description": "Server for Food Recommendation System",
+  "private": true,
+  "description": "Backend server for the Food Recommendation System",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

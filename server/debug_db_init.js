@@ -1,49 +1,56 @@
 const { Client } = require('pg');
 const fs = require('fs');
 
-const logFile = 'debug_log.txt';
-function log(msg) {
-  const line = `[${new Date().toISOString()}] ${msg}\n`;
-  console.log(msg);
-  fs.appendFileSync(logFile, line);
-}
+const LOG_PATH = 'debug_log.txt';
 
-const config = {
+const writeLog = (message) => {
+  const timestamp = new Date().toISOString();
+  const entry = `[${timestamp}] ${message}\n`;
+
+  console.log(message);
+  fs.appendFileSync(LOG_PATH, entry);
+};
+
+const dbConfig = {
   user: 'postgres',
   password: 'bimal',
   host: 'localhost',
   port: 5432,
-  database: 'postgres' // Connect to default DB first
+  database: 'postgres' // initial connection DB
 };
 
-async function run() {
-  log('Starting debug DB init...');
-  const client = new Client(config);
-  
+async function initDatabase() {
+  writeLog('Starting debug DB init...');
+  const pgClient = new Client(dbConfig);
+
   try {
-    log('Connecting to postgres database...');
-    await client.connect();
-    log('Connected.');
-    
-    const dbName = 'food_rec_db';
-    log(`Checking if database "${dbName}" exists...`);
-    const res = await client.query(`SELECT 1 FROM pg_database WHERE datname = $1`, [dbName]);
-    
-    if (res.rowCount === 0) {
-      log(`Database does not exist. Creating "${dbName}"...`);
-      await client.query(`CREATE DATABASE "${dbName}"`);
-      log('Database created successfully.');
+    writeLog('Connecting to postgres database...');
+    await pgClient.connect();
+    writeLog('Connected.');
+
+    const targetDb = 'food_rec_db';
+    writeLog(`Checking if database "${targetDb}" exists...`);
+
+    const result = await pgClient.query(
+      'SELECT 1 FROM pg_database WHERE datname = $1',
+      [targetDb]
+    );
+
+    if (result.rowCount === 0) {
+      writeLog(`Database not found. Creating "${targetDb}"...`);
+      await pgClient.query(`CREATE DATABASE "${targetDb}"`);
+      writeLog('Database created successfully.');
     } else {
-      log('Database already exists.');
+      writeLog('Database already exists.');
     }
-    
-  } catch (err) {
-    log(`ERROR: ${err.message}`);
-    log(err.stack);
+
+  } catch (error) {
+    writeLog(`ERROR: ${error.message}`);
+    writeLog(error.stack);
   } finally {
-    await client.end();
-    log('Client disconnected.');
+    await pgClient.end();
+    writeLog('Client disconnected.');
   }
 }
 
-run();
+initDatabase();
